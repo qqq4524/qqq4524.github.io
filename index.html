@@ -1,1530 +1,429 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RAGflow 知识库助手</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  
-  <!-- Tailwind 配置 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#165DFF',
-            secondary: '#36CBCB',
-            dark: '#1D2129',
-            light: '#F2F3F5',
-            neutral: '#86909C'
-          },
-          fontFamily: {
-            inter: ['Inter', 'system-ui', 'sans-serif'],
-          },
-        },
-      }
-    }
-  </script>
-  
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .content-auto {
-        content-visibility: auto;
-      }
-      .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-      .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-      }
-      .text-balance {
-        text-wrap: balance;
-      }
-    }
-  </style>
-  
-  <style>
-    /* 基础样式 */
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-    }
-    
-    /* 消息气泡动画 */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .message-bubble {
-      animation: fadeIn 0.3s ease forwards;
-    }
-    
-    /* 打字效果 */
-    @keyframes typing {
-      from { width: 0 }
-      to { width: 100% }
-    }
-    
-    @keyframes blink-caret {
-      from, to { border-color: transparent }
-      50% { border-color: currentColor }
-    }
-    
-    .typing-effect {
-      overflow: hidden;
-      border-right: .15em solid;
-      white-space: nowrap;
-      animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
-    }
-    
-    /* 流式响应动画 */
-    .streaming-char {
-      display: inline-block;
-      animation: fadeIn 0.1s ease forwards;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025考研倒计时</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6', // 蓝色作为主色调
+                        secondary: '#EC4899', // 粉色作为辅助色
+                        accent: '#10B981', // 绿色作为强调色
+                        dark: '#1E293B', // 深色背景
+                        light: '#F8FAFC', // 浅色背景
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Montserrat', 'system-ui', 'sans-serif']
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                @apply bg-white/10 backdrop-blur-lg border border-white/20;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .countdown-box {
+                @apply rounded-lg flex flex-col items-center justify-center p-4 transition-all duration-300 ease-in-out;
+            }
+            .countdown-box:hover {
+                @apply transform scale-105 shadow-lg;
+            }
+        }
+    </style>
+    <style>
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 3s infinite;
+        }
+        
+        /* 背景渐变和粒子效果 */
+        body {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 25%, #93C5FD 50%, #BFDBFE 75%, #DBEAFE 100%);
+            background-attachment: fixed;
+            position: relative;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* 粒子效果 */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            animation: float 10s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+    </style>
 </head>
-
-<body class="bg-gray-50 text-dark min-h-screen flex flex-col">
-  <!-- 顶部导航栏 -->
-  <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
-    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <div class="bg-primary text-white p-2 rounded-lg">
-          <i class="fa fa-database text-xl"></i>
-        </div>
-        <h1 class="text-xl font-bold text-primary">RAGflow 知识库助手</h1>
-      </div>
-      
-      <!-- 移动端菜单按钮 -->
-      <button id="mobile-menu-button" class="lg:hidden text-gray-500 hover:text-primary">
-        <i class="fa fa-bars text-xl"></i>
-      </button>
-      
-      <!-- 桌面端导航 -->
-      <nav class="hidden lg:flex items-center space-x-6">
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors">
-          <i class="fa fa-home mr-1"></i> 首页
-        </a>
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors">
-          <i class="fa fa-book mr-1"></i> 知识库
-        </a>
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors">
-          <i class="fa fa-cog mr-1"></i> 设置
-        </a>
-        <div class="relative">
-          <button id="profile-button" class="flex items-center space-x-1 text-gray-600 hover:text-primary transition-colors">
-            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <i class="fa fa-user"></i>
+<body class="font-sans text-light">
+    <!-- 粒子背景 -->
+    <div class="particles"></div>
+    
+    <div class="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-screen relative z-10">
+        <!-- 头部 -->
+        <header class="w-full max-w-4xl text-center mb-8 animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fa fa-graduation-cap text-4xl mr-3 text-white animate-pulse-slow"></i>
+                <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-display font-bold text-shadow">2025考研倒计时</h1>
             </div>
-            <span class="hidden md:inline">用户</span>
-            <i class="fa fa-caret-down"></i>
-          </button>
-          
-          <!-- 下拉菜单 -->
-          <div id="profile-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden">
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-              <i class="fa fa-user-circle mr-2"></i>个人资料
-            </a>
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-              <i class="fa fa-key mr-2"></i>API密钥
-            </a>
-            <div class="border-t border-gray-100 my-1"></div>
-            <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-              <i class="fa fa-sign-out mr-2"></i>退出登录
-            </a>
-          </div>
-        </div>
-      </nav>
+            <p class="text-[clamp(1rem,2vw,1.25rem)] opacity-90">目标日期：2025年12月20日</p>
+        </header>
+        
+        <!-- 倒计时卡片 -->
+        <main class="w-full max-w-4xl">
+            <div class="glass-effect rounded-2xl p-6 md:p-8 shadow-xl animate-fade-in" style="animation-delay: 0.3s;">
+                <!-- 倒计时数字 -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+                    <div id="days" class="countdown-box bg-primary/20">
+                        <span class="text-[clamp(2rem,8vw,4rem)] font-bold">00</span>
+                        <span class="text-sm md:text-base">天</span>
+                    </div>
+                    <div id="hours" class="countdown-box bg-secondary/20">
+                        <span class="text-[clamp(2rem,8vw,4rem)] font-bold">00</span>
+                        <span class="text-sm md:text-base">时</span>
+                    </div>
+                    <div id="minutes" class="countdown-box bg-accent/20">
+                        <span class="text-[clamp(2rem,8vw,4rem)] font-bold">00</span>
+                        <span class="text-sm md:text-base">分</span>
+                    </div>
+                    <div id="seconds" class="countdown-box bg-purple-500/20">
+                        <span class="text-[clamp(2rem,8vw,4rem)] font-bold">00</span>
+                        <span class="text-sm md:text-base">秒</span>
+                    </div>
+                </div>
+                
+                <!-- 激励语句 -->
+                <div class="text-center mb-6">
+                    <p id="motivational-quote" class="text-[clamp(1rem,3vw,1.5rem)] italic opacity-90 transition-all duration-500">
+                        "每一次努力，都是幸运的伏笔"
+                    </p>
+                </div>
+                
+                <!-- 进度条 -->
+                <div class="mb-6">
+                    <div class="flex justify-between mb-2 text-sm">
+                        <span>备考进度</span>
+                        <span id="progress-percentage">0%</span>
+                    </div>
+                    <div class="w-full h-3 bg-white/20 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-gradient-to-r from-primary to-accent transition-all duration-1000 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 功能区 -->
+        <section class="w-full max-w-4xl mt-8 animate-fade-in" style="animation-delay: 0.5s;">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- 学习时间记录 -->
+                <div class="glass-effect rounded-xl p-4 text-center hover:shadow-lg transition-all">
+                    <i class="fa fa-clock-o text-2xl mb-2 text-white"></i>
+                    <h3 class="text-lg font-semibold mb-1">今日学习</h3>
+                    <p id="study-time" class="text-2xl font-bold">0小时</p>
+                    <button id="toggle-study-timer" class="mt-2 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-all">
+                        <i class="fa fa-play mr-1"></i> 开始计时
+                    </button>
+                </div>
+                
+                <!-- 待办事项 -->
+                <div class="glass-effect rounded-xl p-4 hover:shadow-lg transition-all">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold">今日任务</h3>
+                        <i class="fa fa-list-ul text-white"></i>
+                    </div>
+                    <div id="todo-list" class="text-sm space-y-2 max-h-32 overflow-y-auto">
+                        <!-- 待办事项将通过JS动态添加 -->
+                        <div class="flex items-center space-x-2 p-2 bg-white/5 rounded-lg">
+                            <input type="checkbox" class="todo-checkbox rounded text-primary focus:ring-primary">
+                            <span>复习高数第一章</span>
+                        </div>
+                        <div class="flex items-center space-x-2 p-2 bg-white/5 rounded-lg">
+                            <input type="checkbox" class="todo-checkbox rounded text-primary focus:ring-primary">
+                            <span>背诵英语单词50个</span>
+                        </div>
+                        <div class="flex items-center space-x-2 p-2 bg-white/5 rounded-lg">
+                            <input type="checkbox" class="todo-checkbox rounded text-primary focus:ring-primary">
+                            <span>做政治选择题20道</span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <input type="text" id="new-todo" placeholder="添加新任务..." class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                </div>
+                
+                <!-- 考试信息 -->
+                <div class="glass-effect rounded-xl p-4 hover:shadow-lg transition-all">
+                    <h3 class="text-lg font-semibold mb-3">考试信息</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa fa-calendar text-white w-5 text-center"></i>
+                            <span>2025年12月20日 周六</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fa fa-clock-o text-white w-5 text-center"></i>
+                            <span>上午8:30-11:30 思想政治理论</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fa fa-clock-o text-white w-5 text-center"></i>
+                            <span>下午14:00-17:00 外国语</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 页脚 -->
+        <footer class="w-full max-w-4xl mt-12 text-center text-sm opacity-70 animate-fade-in" style="animation-delay: 0.7s;">
+            <p>努力是为了遇到更好的自己 💪</p>
+            <p class="mt-2">© 2025 考研倒计时 - 祝您金榜题名</p>
+        </footer>
     </div>
     
-    <!-- 移动端导航菜单 -->
-    <div id="mobile-menu" class="lg:hidden bg-white shadow-md py-2 px-4 hidden">
-      <nav class="flex flex-col space-y-3">
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors py-2">
-          <i class="fa fa-home mr-2"></i> 首页
-        </a>
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors py-2">
-          <i class="fa fa-book mr-2"></i> 知识库
-        </a>
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors py-2">
-          <i class="fa fa-cog mr-2"></i> 设置
-        </a>
-        <div class="border-t border-gray-100 my-1"></div>
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors py-2">
-          <i class="fa fa-user-circle mr-2"></i> 个人资料
-        </a>
-        <a href="#" class="text-gray-600 hover:text-primary transition-colors py-2">
-          <i class="fa fa-key mr-2"></i> API密钥
-        </a>
-        <a href="#" class="text-red-600 hover:text-red-700 transition-colors py-2">
-          <i class="fa fa-sign-out mr-2"></i> 退出登录
-        </a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- 主内容区 -->
-  <main class="flex-grow container mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
-    <!-- 左侧边栏 -->
-    <aside class="w-full lg:w-72 flex-shrink-0">
-      <!-- API配置卡片 -->
-      <div class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all duration-300 hover:shadow-md">
-        <h2 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="fa fa-plug text-primary mr-2"></i> API 配置
-        </h2>
+    <script>
+        // 目标日期：2025年12月20日
+        const targetDate = new Date('2025-12-20T00:00:00').getTime();
+        // 开始时间使用北京的当前时间
+        const startDate = new Date().getTime();
+        // 计算从现在到目标日期的总天数
+        const totalDays = Math.ceil((targetDate - startDate) / (1000 * 60 * 60 * 24));
         
-        <form id="api-config-form" class="space-y-4">
-          <div>
-            <label for="api-endpoint" class="block text-sm font-medium text-gray-700 mb-1">API 端点</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fa fa-link text-gray-400"></i>
-              </div>
-              <input type="text" id="api-endpoint" name="api-endpoint" 
-                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                placeholder="http://host.docker.internal:9380/api/v1"
-                value="http://host.docker.internal:9380/api/v1">
-            </div>
-          </div>
-          
-          <div>
-            <label for="api-key" class="block text-sm font-medium text-gray-700 mb-1">API 密钥</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fa fa-key text-gray-400"></i>
-              </div>
-              <input type="password" id="api-key" name="api-key" 
-                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                placeholder="输入你的 API 密钥"
-                value="sk-1234567890abcdefghijklmnopqrstuvwxyz">
-              <button type="button" id="toggle-api-key" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                <i class="fa fa-eye"></i>
-              </button>
-            </div>
-          </div>
-          
-          <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center justify-center">
-            <i class="fa fa-check mr-2"></i> 保存配置
-          </button>
-        </form>
-        
-        <div id="api-status" class="mt-4 pt-4 border-t border-gray-100">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-600">连接状态</span>
-            <span id="connection-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-              <i class="fa fa-circle-o mr-1"></i> 未连接
-            </span>
-          </div>
-          <button id="test-connection" class="mt-2 w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1.5 px-3 rounded-lg transition-all text-sm">
-            <i class="fa fa-refresh mr-1"></i> 测试连接
-          </button>
-        </div>
-      </div>
-      
-      <!-- 知识库列表 -->
-      <div class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all duration-300 hover:shadow-md">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold flex items-center">
-            <i class="fa fa-book text-primary mr-2"></i> 知识库
-          </h2>
-          <button id="create-dataset-btn" class="text-primary hover:text-primary/80 transition-colors">
-            <i class="fa fa-plus-circle"></i>
-          </button>
-        </div>
-        
-        <div id="datasets-list" class="space-y-2 max-h-96 overflow-y-auto scrollbar-hide pr-1">
-          <!-- 知识库项会通过JavaScript动态生成 -->
-          <div class="text-center py-6 text-gray-500">
-            <i class="fa fa-database text-3xl mb-2 opacity-20"></i>
-            <p>暂无知识库</p>
-            <p class="text-sm">点击 + 创建一个</p>
-          </div>
-        </div>
-      </div>
-      
-      <!-- 文档上传 -->
-      <div class="bg-white rounded-xl shadow-sm p-5 transform transition-all duration-300 hover:shadow-md">
-        <h2 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="fa fa-upload text-primary mr-2"></i> 上传文档
-        </h2>
-        
-        <div id="document-upload" class="space-y-4">
-          <div id="dataset-selector" class="hidden">
-            <label for="select-dataset" class="block text-sm font-medium text-gray-700 mb-1">选择知识库</label>
-            <select id="select-dataset" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-              <!-- 选项会通过JavaScript动态生成 -->
-              <option value="">请选择知识库</option>
-            </select>
-          </div>
-          
-          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
-            <i class="fa fa-cloud-upload text-4xl text-gray-400 mb-3"></i>
-            <h3 class="text-sm font-medium text-gray-700 mb-1">拖放文件到此处或点击上传</h3>
-            <p class="text-xs text-gray-500 mb-3">支持 PDF, DOCX, TXT 等格式</p>
-            <input type="file" id="file-upload" class="hidden" multiple>
-            <button id="browse-files" class="bg-primary hover:bg-primary/90 text-white text-sm font-medium py-1.5 px-4 rounded-lg transition-all">
-              浏览文件
-            </button>
-          </div>
-          
-          <div id="upload-progress" class="hidden">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-medium text-gray-700">上传进度</span>
-              <span id="upload-percentage" class="text-xs font-medium text-gray-500">0%</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div id="upload-bar" class="bg-primary h-2 rounded-full" style="width: 0%"></div>
-            </div>
-          </div>
-          
-          <div id="uploaded-files" class="space-y-2 hidden">
-            <h4 class="text-xs font-medium text-gray-700 mb-1">已上传文件</h4>
-            <!-- 文件列表会通过JavaScript动态生成 -->
-          </div>
-          
-          <button id="process-documents" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-all flex items-center justify-center opacity-50 cursor-not-allowed" disabled>
-            <i class="fa fa-cogs mr-2"></i> 处理文档
-          </button>
-        </div>
-      </div>
-    </aside>
-    
-    <!-- 右侧主内容区 -->
-    <div class="flex-grow">
-      <!-- 聊天界面 -->
-      <div class="bg-white rounded-xl shadow-sm h-[calc(100vh-12rem)] flex flex-col transform transition-all duration-300 hover:shadow-md">
-        <!-- 聊天头部 -->
-        <div class="border-b border-gray-100 p-4 flex items-center justify-between">
-          <div class="flex items-center">
-            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <i class="fa fa-robot"></i>
-            </div>
-            <div class="ml-3">
-              <h2 class="text-lg font-semibold">AI 助手</h2>
-              <p class="text-xs text-gray-500">知识库就绪，随时为您服务</p>
-            </div>
-          </div>
-          
-          <div class="flex items-center space-x-2">
-            <button id="new-chat" class="text-gray-500 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
-              <i class="fa fa-comment-o"></i>
-            </button>
-            <button id="clear-chat" class="text-gray-500 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
-              <i class="fa fa-trash-o"></i>
-            </button>
-            <button id="settings" class="text-gray-500 hover:text-primary transition-colors p-2 rounded-full hover:bg-gray-100">
-              <i class="fa fa-cog"></i>
-            </button>
-          </div>
-        </div>
-        
-        <!-- 聊天消息区 -->
-        <div id="chat-messages" class="flex-grow p-4 overflow-y-auto scrollbar-hide space-y-4">
-          <!-- 欢迎消息 -->
-          <div class="flex items-start message-bubble">
-            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 mt-1">
-              <i class="fa fa-robot"></i>
-            </div>
-            <div class="ml-3 bg-gray-50 rounded-lg p-3 max-w-[80%]">
-              <p class="text-gray-800">您好！我是您的知识库助手。请先选择一个知识库，然后我可以回答您关于该知识库的问题。</p>
-              <div class="mt-2 text-xs text-gray-500">知识库助手</div>
-            </div>
-          </div>
-          
-          <!-- 提示选择知识库 -->
-          <div class="flex items-start message-bubble">
-            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 mt-1">
-              <i class="fa fa-robot"></i>
-            </div>
-            <div class="ml-3 bg-gray-50 rounded-lg p-3 max-w-[80%]">
-              <p class="text-gray-800">您还没有选择知识库，请在左侧选择一个知识库后再提问。</p>
-              <div class="mt-2 text-xs text-gray-500">知识库助手</div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 聊天输入区 -->
-        <div class="border-t border-gray-100 p-4">
-          <div class="flex items-end space-x-2">
-            <div class="flex-grow relative">
-              <textarea id="message-input" 
-                class="w-full resize-none py-3 px-4 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder-gray-400"
-                rows="1" placeholder="请输入您的问题..."
-                disabled></textarea>
-              <div class="absolute right-3 bottom-3 text-gray-400">
-                <i class="fa fa-paperclip cursor-pointer hover:text-primary transition-colors"></i>
-              </div>
-            </div>
-            <button id="send-message" class="bg-primary hover:bg-primary/90 text-white p-3 rounded-lg transition-all flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-              <i class="fa fa-paper-plane"></i>
-            </button>
-          </div>
-          <div class="mt-2 text-xs text-gray-500 flex items-center justify-between">
-            <span>支持 Markdown 语法</span>
-            <span id="selected-dataset-info" class="opacity-0">当前知识库: <span id="current-dataset-name">未选择</span></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- 页脚 -->
-  <footer class="bg-white border-t border-gray-200 py-6 mt-8">
-    <div class="container mx-auto px-4">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <div class="flex items-center space-x-2 mb-4 md:mb-0">
-          <div class="bg-primary text-white p-1.5 rounded-lg">
-            <i class="fa fa-database text-sm"></i>
-          </div>
-          <span class="text-gray-600 font-medium">RAGflow 知识库助手</span>
-        </div>
-        
-        <div class="flex items-center space-x-6">
-          <a href="#" class="text-gray-500 hover:text-primary transition-colors">
-            <i class="fa fa-github text-xl"></i>
-          </a>
-          <a href="#" class="text-gray-500 hover:text-primary transition-colors">
-            <i class="fa fa-twitter text-xl"></i>
-          </a>
-          <a href="#" class="text-gray-500 hover:text-primary transition-colors">
-            <i class="fa fa-linkedin text-xl"></i>
-          </a>
-        </div>
-      </div>
-      
-      <div class="mt-6 pt-6 border-t border-gray-100 text-center text-gray-500 text-sm">
-        <p>© 2023 RAGflow 知识库助手. 保留所有权利.</p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- 创建数据集模态框 -->
-  <div id="create-dataset-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold">创建知识库</h3>
-          <button id="close-modal" class="text-gray-400 hover:text-gray-500">
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
-        
-        <form id="create-dataset-form" class="space-y-4">
-          <div>
-            <label for="dataset-name" class="block text-sm font-medium text-gray-700 mb-1">知识库名称</label>
-            <input type="text" id="dataset-name" name="dataset-name" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-              placeholder="输入知识库名称">
-          </div>
-          
-          <div>
-            <label for="dataset-language" class="block text-sm font-medium text-gray-700 mb-1">语言</label>
-            <select id="dataset-language" name="dataset-language" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-              <option value="zh">中文</option>
-              <option value="en">英文</option>
-              <option value="ja">日文</option>
-              <option value="ko">韩文</option>
-              <option value="fr">法文</option>
-              <option value="de">德文</option>
-            </select>
-          </div>
-          
-          <div>
-            <label for="dataset-model" class="block text-sm font-medium text-gray-700 mb-1">嵌入模型</label>
-            <select id="dataset-model" name="dataset-model" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-              <option value="text-embedding-ada-002">text-embedding-ada-002</option>
-              <option value="sentence-transformers/all-MiniLM-L6-v2">all-MiniLM-L6-v2</option>
-              <option value="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2">paraphrase-multilingual-MiniLM-L12-v2</option>
-            </select>
-          </div>
-          
-          <div class="pt-2">
-            <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center justify-center">
-              <i class="fa fa-check mr-2"></i> 创建知识库
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- 处理文档模态框 -->
-  <div id="processing-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 p-6">
-      <div class="text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
-          <i class="fa fa-cogs text-2xl animate-spin"></i>
-        </div>
-        <h3 class="text-lg font-semibold mb-2">正在处理文档</h3>
-        <p class="text-gray-500 mb-4">正在解析文档内容并生成向量表示，请稍候...</p>
-        
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-xs font-medium text-gray-700">处理进度</span>
-          <span id="processing-percentage" class="text-xs font-medium text-gray-500">0%</span>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-2">
-          <div id="processing-bar" class="bg-primary h-2 rounded-full" style="width: 0%"></div>
-        </div>
-        
-        <div id="processing-details" class="mt-4 text-left text-sm text-gray-600 hidden">
-          <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 文档上传完成</p>
-          <p><i class="fa fa-spinner text-yellow-500 mr-1"></i> 正在解析文档内容...</p>
-          <p><i class="fa fa-circle-o text-gray-400 mr-1"></i> 正在生成向量表示...</p>
-          <p><i class="fa fa-circle-o text-gray-400 mr-1"></i> 正在索引知识库...</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 处理完成模态框 -->
-  <div id="processing-complete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 p-6">
-      <div class="text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4">
-          <i class="fa fa-check-circle text-2xl"></i>
-        </div>
-        <h3 class="text-lg font-semibold mb-2">处理完成</h3>
-        <p class="text-gray-500 mb-4">文档已成功处理并添加到知识库中。</p>
-        
-        <div class="flex space-x-3">
-          <button id="close-complete-modal" class="flex-grow bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-all">
-            关闭
-          </button>
-          <button id="start-chat-with-dataset" class="flex-grow bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all">
-            开始对话
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 聊天设置模态框 -->
-  <div id="chat-settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-md mx-4 transform transition-all duration-300 scale-95 opacity-0" id="settings-modal-content">
-      <div class="p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold">聊天设置</h3>
-          <button id="close-settings-modal" class="text-gray-400 hover:text-gray-500">
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
-        
-        <form id="chat-settings-form" class="space-y-4">
-          <div>
-            <label for="model-select" class="block text-sm font-medium text-gray-700 mb-1">选择模型</label>
-            <select id="model-select" name="model-select" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              <option value="gpt-4">GPT-4</option>
-              <option value="claude-2">Claude 2</option>
-            </select>
-          </div>
-          
-          <div>
-            <label for="temperature" class="block text-sm font-medium text-gray-700 mb-1">创造力 (Temperature)</label>
-            <div class="flex items-center space-x-3">
-              <input type="range" id="temperature" name="temperature" 
-                min="0" max="1" step="0.1" value="0.7"
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
-              <span id="temperature-value" class="text-sm font-medium text-gray-700 w-8 text-center">0.7</span>
-            </div>
-          </div>
-          
-          <div>
-            <label for="max-tokens" class="block text-sm font-medium text-gray-700 mb-1">最大回复长度</label>
-            <input type="number" id="max-tokens" name="max-tokens" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-              min="1" max="4096" value="2048">
-          </div>
-          
-          <div class="pt-2">
-            <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all flex items-center justify-center">
-              <i class="fa fa-check mr-2"></i> 保存设置
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // 存储API配置
-    let apiConfig = {
-      endpoint: 'http://host.docker.internal:9380/api/v1',
-      apiKey: 'sk-1234567890abcdefghijklmnopqrstuvwxyz'
-    };
-    
-    // 存储当前选中的数据集
-    let currentDataset = null;
-    
-    // 存储已上传的文件
-    let uploadedFiles = [];
-    
-    // 模拟数据集列表
-    let datasets = [];
-    
-    // 模拟聊天历史
-    let chatHistory = [];
-    
-    // DOM 加载完成后执行
-    document.addEventListener('DOMContentLoaded', function() {
-      // 加载API配置
-      loadApiConfig();
-      
-      // 绑定事件处理程序
-      bindEventHandlers();
-      
-      // 初始化页面状态
-      updatePageState();
-    });
-    
-    // 加载API配置
-    function loadApiConfig() {
-      const savedConfig = localStorage.getItem('ragflowApiConfig');
-      if (savedConfig) {
-        try {
-          apiConfig = JSON.parse(savedConfig);
-          document.getElementById('api-endpoint').value = apiConfig.endpoint;
-          document.getElementById('api-key').value = apiConfig.apiKey;
-        } catch (e) {
-          console.error('Failed to parse saved API config:', e);
-        }
-      }
-    }
-    
-    // 保存API配置
-    function saveApiConfig() {
-      localStorage.setItem('ragflowApiConfig', JSON.stringify(apiConfig));
-    }
-    
-    // 绑定事件处理程序
-    function bindEventHandlers() {
-      // 导航菜单
-      document.getElementById('mobile-menu-button').addEventListener('click', toggleMobileMenu);
-      document.getElementById('profile-button').addEventListener('click', toggleProfileDropdown);
-      
-      // API配置表单
-      document.getElementById('api-config-form').addEventListener('submit', handleApiConfigSubmit);
-      document.getElementById('toggle-api-key').addEventListener('click', toggleApiKeyVisibility);
-      document.getElementById('test-connection').addEventListener('click', testApiConnection);
-      
-      // 知识库操作
-      document.getElementById('create-dataset-btn').addEventListener('click', openCreateDatasetModal);
-      document.getElementById('create-dataset-form').addEventListener('submit', handleCreateDataset);
-      document.getElementById('close-modal').addEventListener('click', closeCreateDatasetModal);
-      
-      // 文档上传
-      document.getElementById('browse-files').addEventListener('click', () => document.getElementById('file-upload').click());
-      document.getElementById('file-upload').addEventListener('change', handleFileUpload);
-      document.getElementById('process-documents').addEventListener('click', processDocuments);
-      
-      // 聊天功能
-      document.getElementById('send-message').addEventListener('click', sendMessage);
-      document.getElementById('message-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-      document.getElementById('clear-chat').addEventListener('click', clearChat);
-      document.getElementById('new-chat').addEventListener('click', startNewChat);
-      
-      // 聊天设置
-      document.getElementById('settings').addEventListener('click', openChatSettingsModal);
-      document.getElementById('chat-settings-form').addEventListener('submit', handleChatSettingsSubmit);
-      document.getElementById('close-settings-modal').addEventListener('click', closeChatSettingsModal);
-      
-      // 温度滑块
-      document.getElementById('temperature').addEventListener('input', updateTemperatureValue);
-      
-      // 模态框关闭
-      document.getElementById('close-complete-modal').addEventListener('click', closeProcessingCompleteModal);
-      document.getElementById('start-chat-with-dataset').addEventListener('click', startChatWithDataset);
-      
-      // 点击模态框外部关闭
-      document.getElementById('create-dataset-modal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('create-dataset-modal')) {
-          closeCreateDatasetModal();
-        }
-      });
-      
-      document.getElementById('chat-settings-modal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('chat-settings-modal')) {
-          closeChatSettingsModal();
-        }
-      });
-      
-      // 文本框自动调整高度
-      document.getElementById('message-input').addEventListener('input', autoResizeTextarea);
-    }
-    
-    // 自动调整文本框高度
-    function autoResizeTextarea() {
-      const textarea = document.getElementById('message-input');
-      textarea.style.height = 'auto';
-      textarea.style.height = (textarea.scrollHeight > 120 ? 120 : textarea.scrollHeight) + 'px';
-    }
-    
-    // 更新页面状态
-    function updatePageState() {
-      // 更新聊天输入框状态
-      const messageInput = document.getElementById('message-input');
-      const sendButton = document.getElementById('send-message');
-      
-      if (currentDataset) {
-        messageInput.disabled = false;
-        sendButton.disabled = false;
-        document.getElementById('selected-dataset-info').classList.remove('opacity-0');
-        document.getElementById('current-dataset-name').textContent = currentDataset.name;
-      } else {
-        messageInput.disabled = true;
-        sendButton.disabled = true;
-        document.getElementById('selected-dataset-info').classList.add('opacity-0');
-      }
-      
-      // 更新处理文档按钮状态
-      const processButton = document.getElementById('process-documents');
-      if (uploadedFiles.length > 0 && document.getElementById('select-dataset').value) {
-        processButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        processButton.disabled = false;
-      } else {
-        processButton.classList.add('opacity-50', 'cursor-not-allowed');
-        processButton.disabled = true;
-      }
-      
-      // 更新数据集选择器
-      updateDatasetSelector();
-      
-      // 更新知识库列表
-      updateDatasetsList();
-    }
-    
-    // 更新数据集选择器
-    function updateDatasetSelector() {
-      const selector = document.getElementById('select-dataset');
-      const options = selector.options;
-      
-      // 清空现有选项
-      while (options.length > 1) {
-        selector.remove(1);
-      }
-      
-      // 添加新选项
-      datasets.forEach(dataset => {
-        const option = document.createElement('option');
-        option.value = dataset.id;
-        option.textContent = dataset.name;
-        selector.appendChild(option);
-      });
-      
-      // 如果有选中的数据集，设置为选中状态
-      if (currentDataset) {
-        selector.value = currentDataset.id;
-      }
-      
-      // 如果有数据集，显示选择器
-      if (datasets.length > 0) {
-        document.getElementById('dataset-selector').classList.remove('hidden');
-      } else {
-        document.getElementById('dataset-selector').classList.add('hidden');
-      }
-    }
-    
-    // 更新知识库列表
-    function updateDatasetsList() {
-      const listContainer = document.getElementById('datasets-list');
-      
-      // 清空现有列表
-      listContainer.innerHTML = '';
-      
-      if (datasets.length === 0) {
-        // 显示空状态
-        listContainer.innerHTML = `
-          <div class="text-center py-6 text-gray-500">
-            <i class="fa fa-database text-3xl mb-2 opacity-20"></i>
-            <p>暂无知识库</p>
-            <p class="text-sm">点击 + 创建一个</p>
-          </div>
-        `;
-        return;
-      }
-      
-      // 添加新的知识库项
-      datasets.forEach(dataset => {
-        const datasetItem = document.createElement('div');
-        datasetItem.className = `p-3 rounded-lg flex items-center justify-between cursor-pointer transition-all hover:bg-gray-50 ${currentDataset && currentDataset.id === dataset.id ? 'bg-primary/5 border-l-4 border-primary' : ''}`;
-        
-        datasetItem.innerHTML = `
-          <div class="flex items-center">
-            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
-              <i class="fa fa-book"></i>
-            </div>
-            <div>
-              <h3 class="font-medium text-gray-800">${dataset.name}</h3>
-              <p class="text-xs text-gray-500">${dataset.documents.length} 个文档</p>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2">
-            <button class="text-gray-400 hover:text-primary transition-colors edit-dataset" data-id="${dataset.id}">
-              <i class="fa fa-pencil"></i>
-            </button>
-            <button class="text-gray-400 hover:text-red-500 transition-colors delete-dataset" data-id="${dataset.id}">
-              <i class="fa fa-trash"></i>
-            </button>
-          </div>
-        `;
-        
-        // 添加点击事件
-        datasetItem.addEventListener('click', () => selectDataset(dataset));
-        
-        // 添加编辑和删除事件
-        datasetItem.querySelector('.edit-dataset').addEventListener('click', (e) => {
-          e.stopPropagation();
-          // 编辑功能
-          alert('编辑功能尚未实现');
-        });
-        
-        datasetItem.querySelector('.delete-dataset').addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteDataset(dataset.id);
-        });
-        
-        listContainer.appendChild(datasetItem);
-      });
-    }
-    
-    // 选择数据集
-    function selectDataset(dataset) {
-      currentDataset = dataset;
-      updatePageState();
-      
-      // 添加系统消息
-      addMessage('system', `已切换到知识库: ${dataset.name}`);
-      
-      // 加载聊天历史
-      loadChatHistory(dataset.id);
-    }
-    
-    // 加载聊天历史
-    function loadChatHistory(datasetId) {
-      // 清空聊天区域
-      const chatMessages = document.getElementById('chat-messages');
-      chatMessages.innerHTML = '';
-      
-      // 从本地存储获取聊天历史
-      const savedHistory = localStorage.getItem(`chatHistory_${datasetId}`);
-      if (savedHistory) {
-        try {
-          chatHistory = JSON.parse(savedHistory);
-          
-          // 渲染聊天历史
-          chatHistory.forEach(message => {
-            addMessage(message.role, message.content, false);
-          });
-        } catch (e) {
-          console.error('Failed to parse saved chat history:', e);
-          chatHistory = [];
-        }
-      } else {
-        chatHistory = [];
-        
-        // 添加欢迎消息
-        addMessage('assistant', `您好！我是基于 "${currentDataset.name}" 知识库的AI助手。请问您有什么问题？`);
-      }
-      
-      // 滚动到底部
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    // 保存聊天历史
-    function saveChatHistory() {
-      if (currentDataset) {
-        localStorage.setItem(`chatHistory_${currentDataset.id}`, JSON.stringify(chatHistory));
-      }
-    }
-    
-    // 添加消息到聊天区域
-    function addMessage(role, content, save = true) {
-      const chatMessages = document.getElementById('chat-messages');
-      
-      // 创建消息元素
-      let messageElement;
-      
-      if (role === 'user') {
-        messageElement = document.createElement('div');
-        messageElement.className = 'flex items-start justify-end message-bubble';
-        messageElement.innerHTML = `
-          <div class="mr-3 bg-primary text-white rounded-lg p-3 max-w-[80%]">
-            <p>${content}</p>
-            <div class="mt-2 text-xs text-white/70">您</div>
-          </div>
-          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0 mt-1">
-            <i class="fa fa-user"></i>
-          </div>
-        `;
-      } else if (role === 'assistant') {
-        messageElement = document.createElement('div');
-        messageElement.className = 'flex items-start message-bubble';
-        messageElement.innerHTML = `
-          <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 mt-1">
-            <i class="fa fa-robot"></i>
-          </div>
-          <div class="ml-3 bg-gray-50 rounded-lg p-3 max-w-[80%]">
-            <p>${content}</p>
-            <div class="mt-2 text-xs text-gray-500">知识库助手</div>
-          </div>
-        `;
-      } else if (role === 'system') {
-        messageElement = document.createElement('div');
-        messageElement.className = 'flex justify-center message-bubble';
-        messageElement.innerHTML = `
-          <div class="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full">
-            ${content}
-          </div>
-        `;
-      }
-      
-      // 添加到聊天区域
-      chatMessages.appendChild(messageElement);
-      
-      // 保存到聊天历史
-      if (save && role !== 'system') {
-        chatHistory.push({ role, content });
-        saveChatHistory();
-      }
-      
-      // 滚动到底部
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    // 发送消息
-    function sendMessage() {
-      const messageInput = document.getElementById('message-input');
-      const message = messageInput.value.trim();
-      
-      if (!message || !currentDataset) return;
-      
-      // 添加用户消息
-      addMessage('user', message);
-      
-      // 清空输入框
-      messageInput.value = '';
-      messageInput.style.height = 'auto';
-      
-      // 添加思考消息
-      const thinkingId = 'thinking-message';
-      addMessage('system', thinkingId);
-      
-      // 模拟API调用
-      simulateRagflowApiCall(message)
-        .then(response => {
-          // 移除思考消息
-          const chatMessages = document.getElementById('chat-messages');
-          const thinkingElement = chatMessages.querySelector(`div:contains("${thinkingId}")`);
-          if (thinkingElement) {
-            chatMessages.removeChild(thinkingElement);
-          }
-          
-          // 添加助手回复
-          addMessage('assistant', response);
-        })
-        .catch(error => {
-          // 移除思考消息
-          const chatMessages = document.getElementById('chat-messages');
-          const thinkingElement = chatMessages.querySelector(`div:contains("${thinkingId}")`);
-          if (thinkingElement) {
-            chatMessages.removeChild(thinkingElement);
-          }
-          
-          // 添加错误消息
-          addMessage('assistant', `抱歉，我在处理您的请求时遇到了问题: ${error.message}`);
-        });
-    }
-    
-    // 模拟RAGflow API调用
-    function simulateRagflowApiCall(message) {
-      return new Promise((resolve, reject) => {
-        // 模拟网络延迟
-        setTimeout(() => {
-          // 简单的模拟回复
-          const responses = [
-            `根据知识库中的信息，关于"${message}"的解答是...`,
-            `我在"${currentDataset.name}"知识库中找到了与您问题相关的内容...`,
-            `根据文档内容，我可以回答您的问题: ${message}`,
-            `在分析了相关文档后，我认为...`,
-            `知识库中关于"${message}"的信息如下...`
-          ];
-          
-          // 随机选择一个回复
-          const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-          
-          // 随机决定是否成功
-          if (Math.random() > 0.1) {
-            resolve(randomResponse);
-          } else {
-            reject(new Error('API调用失败，请重试'));
-          }
-        }, 1000 + Math.random() * 2000);
-      });
-    }
-    
-    // 清空聊天
-    function clearChat() {
-      if (!currentDataset) return;
-      
-      const chatMessages = document.getElementById('chat-messages');
-      chatMessages.innerHTML = '';
-      
-      chatHistory = [];
-      localStorage.removeItem(`chatHistory_${currentDataset.id}`);
-      
-      // 添加欢迎消息
-      addMessage('assistant', `您好！我是基于 "${currentDataset.name}" 知识库的AI助手。请问您有什么问题？`);
-    }
-    
-    // 开始新聊天
-    function startNewChat() {
-      if (!currentDataset) return;
-      
-      const chatMessages = document.getElementById('chat-messages');
-      chatMessages.innerHTML = '';
-      
-      // 添加系统消息
-      addMessage('system', '已开始新的对话');
-      
-      // 添加欢迎消息
-      addMessage('assistant', `您好！我是基于 "${currentDataset.name}" 知识库的AI助手。请问您有什么问题？`);
-    }
-    
-    // 处理API配置提交
-    function handleApiConfigSubmit(e) {
-      e.preventDefault();
-      
-      apiConfig.endpoint = document.getElementById('api-endpoint').value.trim();
-      apiConfig.apiKey = document.getElementById('api-key').value.trim();
-      
-      saveApiConfig();
-      
-      // 测试连接
-      testApiConnection();
-    }
-    
-    // 切换API密钥可见性
-    function toggleApiKeyVisibility() {
-      const apiKeyInput = document.getElementById('api-key');
-      const toggleButton = document.getElementById('toggle-api-key');
-      
-      if (apiKeyInput.type === 'password') {
-        apiKeyInput.type = 'text';
-        toggleButton.innerHTML = '<i class="fa fa-eye-slash"></i>';
-      } else {
-        apiKeyInput.type = 'password';
-        toggleButton.innerHTML = '<i class="fa fa-eye"></i>';
-      }
-    }
-    
-    // 测试API连接
-    function testApiConnection() {
-      const statusElement = document.getElementById('connection-status');
-      const testButton = document.getElementById('test-connection');
-      
-      // 更新状态
-      statusElement.innerHTML = '<i class="fa fa-circle-o-notch fa-spin mr-1"></i> 测试中...';
-      statusElement.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
-      testButton.disabled = true;
-      
-      // 模拟API测试
-      setTimeout(() => {
-        // 随机决定是否成功
-        const isSuccess = Math.random() > 0.2;
-        
-        if (isSuccess) {
-          statusElement.innerHTML = '<i class="fa fa-check-circle mr-1"></i> 连接成功';
-          statusElement.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
-          
-          // 加载数据集
-          loadDatasets();
-        } else {
-          statusElement.innerHTML = '<i class="fa fa-times-circle mr-1"></i> 连接失败';
-          statusElement.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
-        }
-        
-        testButton.disabled = false;
-      }, 1500);
-    }
-    
-    // 加载数据集
-    function loadDatasets() {
-      // 模拟API调用
-      setTimeout(() => {
-        // 模拟数据集
-        datasets = [
-          {
-            id: 'dataset-1',
-            name: '产品文档',
-            language: 'zh',
-            model: 'text-embedding-ada-002',
-            documents: [
-              { id: 'doc-1', name: '用户手册.pdf', type: 'pdf' },
-              { id: 'doc-2', name: '功能介绍.docx', type: 'docx' },
-              { id: 'doc-3', name: '常见问题.txt', type: 'txt' }
-            ]
-          },
-          {
-            id: 'dataset-2',
-            name: '技术白皮书',
-            language: 'en',
-            model: 'sentence-transformers/all-MiniLM-L6-v2',
-            documents: [
-              { id: 'doc-4', name: 'Architecture.pdf', type: 'pdf' },
-              { id: 'doc-5', name: 'Algorithm.md', type: 'md' }
-            ]
-          }
+        // 激励语句数组
+        const motivationalQuotes = [
+            "每一次努力，都是幸运的伏笔",
+            "坚持就是胜利，加油！",
+            "今日的汗水，明日的辉煌",
+            "相信自己，你一定可以！",
+            "考研是一场持久战，坚持到最后",
+            "不积跬步，无以至千里",
+            "成功属于永不言弃的人",
+            "现在的努力，未来的你会感谢自己",
+            "每天进步一点点，成功就会靠近一点点",
+            "心之所向，素履以往"
         ];
         
-        // 更新页面状态
-        updatePageState();
-      }, 1000);
-    }
-    
-    // 打开创建数据集模态框
-    function openCreateDatasetModal() {
-      const modal = document.getElementById('create-dataset-modal');
-      const modalContent = document.getElementById('modal-content');
-      
-      // 重置表单
-      document.getElementById('create-dataset-form').reset();
-      
-      // 显示模态框
-      modal.classList.remove('hidden');
-      
-      // 添加动画
-      setTimeout(() => {
-        modalContent.classList.remove('scale-95', 'opacity-0');
-        modalContent.classList.add('scale-100', 'opacity-100');
-      }, 10);
-      
-      // 聚焦到第一个输入框
-      document.getElementById('dataset-name').focus();
-    }
-    
-    // 关闭创建数据集模态框
-    function closeCreateDatasetModal() {
-      const modal = document.getElementById('create-dataset-modal');
-      const modalContent = document.getElementById('modal-content');
-      
-      // 添加动画
-      modalContent.classList.remove('scale-100', 'opacity-100');
-      modalContent.classList.add('scale-95', 'opacity-0');
-      
-      // 隐藏模态框
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 300);
-    }
-    
-    // 处理创建数据集
-    function handleCreateDataset(e) {
-      e.preventDefault();
-      
-      const name = document.getElementById('dataset-name').value.trim();
-      const language = document.getElementById('dataset-language').value;
-      const model = document.getElementById('dataset-model').value;
-      
-      if (!name) {
-        alert('请输入知识库名称');
-        return;
-      }
-      
-      // 模拟API调用
-      const newDataset = {
-        id: `dataset-${Date.now()}`,
-        name,
-        language,
-        model,
-        documents: []
-      };
-      
-      // 添加到数据集列表
-      datasets.push(newDataset);
-      
-      // 更新页面状态
-      updatePageState();
-      
-      // 关闭模态框
-      closeCreateDatasetModal();
-      
-      // 选择新创建的数据集
-      selectDataset(newDataset);
-      
-      // 显示成功消息
-      addMessage('system', `已成功创建知识库: ${name}`);
-    }
-    
-    // 删除数据集
-    function deleteDataset(datasetId) {
-      if (!confirm('确定要删除这个知识库吗？此操作不可恢复。')) {
-        return;
-      }
-      
-      // 找到要删除的数据集
-      const datasetIndex = datasets.findIndex(dataset => dataset.id === datasetId);
-      
-      if (datasetIndex === -1) {
-        return;
-      }
-      
-      const datasetName = datasets[datasetIndex].name;
-      
-      // 从列表中删除
-      datasets.splice(datasetIndex, 1);
-      
-      // 如果删除的是当前选中的数据集，清除当前选中
-      if (currentDataset && currentDataset.id === datasetId) {
-        currentDataset = null;
-        clearChat();
-      }
-      
-      // 更新页面状态
-      updatePageState();
-      
-      // 显示成功消息
-      addMessage('system', `已成功删除知识库: ${datasetName}`);
-    }
-    
-    // 处理文件上传
-    function handleFileUpload(e) {
-      const files = e.target.files;
-      
-      if (!files || files.length === 0) {
-        return;
-      }
-      
-      // 显示上传进度
-      const uploadProgress = document.getElementById('upload-progress');
-      uploadProgress.classList.remove('hidden');
-      
-      // 模拟上传进度
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 10;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          
-          // 上传完成
-          setTimeout(() => {
-            // 添加到已上传文件列表
-            for (let i = 0; i < files.length; i++) {
-              uploadedFiles.push({
-                id: `file-${Date.now()}-${i}`,
-                name: files[i].name,
-                size: formatFileSize(files[i].size),
-                type: files[i].type.split('/')[0]
-              });
+        // 生成粒子背景
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            const particleCount = Math.floor(window.innerWidth / 20);
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // 随机大小和位置
+                const size = Math.random() * 10 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.opacity = Math.random() * 0.5 + 0.2;
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // 更新倒计时
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            
+            // 计算天、时、分、秒
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // 显示结果
+            document.getElementById('days').querySelector('span:first-child').innerText = days.toString().padStart(2, '0');
+            document.getElementById('hours').querySelector('span:first-child').innerText = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').querySelector('span:first-child').innerText = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').querySelector('span:first-child').innerText = seconds.toString().padStart(2, '0');
+            
+            // 更新进度条 - 由于开始时间是当前时间，进度条计算方式需要调整
+            const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+            // 计算从页面加载到目标日期的总天数变化
+            const currentTotalDays = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+            // 动态更新总天数，确保进度条计算准确
+            const totalElapsedDays = totalDays - currentTotalDays;
+            const progressPercentage = Math.min(Math.floor((totalElapsedDays / totalDays) * 100), 100);
+            document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            document.getElementById('progress-percentage').innerText = `${progressPercentage}%`;
+        }
+        
+        // 随机显示激励语句
+        function displayRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+            const quoteElement = document.getElementById('motivational-quote');
+            
+            // 添加淡入效果
+            quoteElement.style.opacity = '0';
+            setTimeout(() => {
+                quoteElement.innerText = motivationalQuotes[randomIndex];
+                quoteElement.style.opacity = '0.9';
+            }, 300);
+        }
+        
+        // 学习计时器功能
+        let studyTimerInterval = null;
+        let studyTimeInSeconds = 0;
+        
+        function startStudyTimer() {
+            const toggleButton = document.getElementById('toggle-study-timer');
+            
+            if (studyTimerInterval) {
+                // 停止计时器
+                clearInterval(studyTimerInterval);
+                studyTimerInterval = null;
+                toggleButton.innerHTML = '<i class="fa fa-play mr-1"></i> 继续计时';
+            } else {
+                // 开始计时器
+                studyTimerInterval = setInterval(() => {
+                    studyTimeInSeconds++;
+                    updateStudyTimeDisplay();
+                }, 1000);
+                toggleButton.innerHTML = '<i class="fa fa-pause mr-1"></i> 暂停计时';
+            }
+        }
+        
+        function updateStudyTimeDisplay() {
+            const hours = Math.floor(studyTimeInSeconds / 3600);
+            const minutes = Math.floor((studyTimeInSeconds % 3600) / 60);
+            const seconds = studyTimeInSeconds % 60;
+            
+            let displayText = '';
+            if (hours > 0) {
+                displayText += `${hours}小时`;
+            }
+            if (minutes > 0 || hours > 0) {
+                displayText += `${minutes}分钟`;
+            }
+            if (seconds > 0 && hours === 0 && minutes === 0) {
+                displayText += `${seconds}秒`;
             }
             
-            // 更新已上传文件列表
-            updateUploadedFilesList();
-            
-            // 隐藏上传进度
-            uploadProgress.classList.add('hidden');
-            
-            // 更新页面状态
-            updatePageState();
-          }, 500);
+            document.getElementById('study-time').innerText = displayText || '0小时';
         }
         
-        document.getElementById('upload-percentage').textContent = `${Math.round(progress)}%`;
-        document.getElementById('upload-bar').style.width = `${progress}%`;
-      }, 300);
-    }
-    
-    // 更新已上传文件列表
-    function updateUploadedFilesList() {
-      const uploadedFilesContainer = document.getElementById('uploaded-files');
-      
-      if (uploadedFiles.length === 0) {
-        uploadedFilesContainer.classList.add('hidden');
-        return;
-      }
-      
-      // 显示容器
-      uploadedFilesContainer.classList.remove('hidden');
-      
-      // 清空现有列表
-      const filesListContainer = uploadedFilesContainer.querySelector('div');
-      if (!filesListContainer) {
-        const div = document.createElement('div');
-        div.className = 'space-y-2';
-        uploadedFilesContainer.appendChild(div);
-      } else {
-        filesListContainer.innerHTML = '';
-      }
-      
-      // 添加新文件
-      uploadedFiles.forEach(file => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'flex items-center justify-between p-2 bg-gray-50 rounded-lg';
-        
-        fileItem.innerHTML = `
-          <div class="flex items-center">
-            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mr-3">
-              <i class="fa fa-file-${getFileIcon(file.type)}"></i>
-            </div>
-            <div>
-              <h4 class="font-medium text-gray-800 text-sm">${file.name}</h4>
-              <p class="text-xs text-gray-500">${file.size}</p>
-            </div>
-          </div>
-          <button class="text-gray-400 hover:text-red-500 transition-colors remove-file" data-id="${file.id}">
-            <i class="fa fa-times-circle"></i>
-          </button>
-        `;
-        
-        // 添加删除事件
-        fileItem.querySelector('.remove-file').addEventListener('click', () => {
-          removeFile(file.id);
-        });
-        
-        filesListContainer.appendChild(fileItem);
-      });
-    }
-    
-    // 移除文件
-    function removeFile(fileId) {
-      // 从列表中删除
-      uploadedFiles = uploadedFiles.filter(file => file.id !== fileId);
-      
-      // 更新已上传文件列表
-      updateUploadedFilesList();
-      
-      // 更新页面状态
-      updatePageState();
-    }
-    
-    // 获取文件图标
-    function getFileIcon(fileType) {
-      switch (fileType) {
-        case 'pdf':
-          return 'pdf-o';
-        case 'image':
-          return 'image-o';
-        case 'video':
-          return 'video-o';
-        case 'audio':
-          return 'audio-o';
-        case 'text':
-          return 'text-o';
-        case 'word':
-          return 'word-o';
-        case 'excel':
-          return 'excel-o';
-        case 'powerpoint':
-          return 'powerpoint-o';
-        default:
-          return 'o';
-      }
-    }
-    
-    // 格式化文件大小
-    function formatFileSize(bytes) {
-      if (bytes === 0) return '0 Bytes';
-      
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-    
-    // 处理文档
-    function processDocuments() {
-      if (uploadedFiles.length === 0 || !document.getElementById('select-dataset').value) {
-        return;
-      }
-      
-      // 获取选中的数据集
-      const datasetId = document.getElementById('select-dataset').value;
-      const dataset = datasets.find(d => d.id === datasetId);
-      
-      if (!dataset) {
-        alert('请选择一个有效的知识库');
-        return;
-      }
-      
-      // 显示处理模态框
-      const processingModal = document.getElementById('processing-modal');
-      processingModal.classList.remove('hidden');
-      
-      // 显示处理详情
-      document.getElementById('processing-details').classList.remove('hidden');
-      
-      // 模拟处理进度
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 5;
-        if (progress >= 100) {
-          progress = 100;
-          clearInterval(interval);
-          
-          // 处理完成
-          setTimeout(() => {
-            // 隐藏处理模态框
-            processingModal.classList.add('hidden');
+        // 待办事项功能
+        function addTodoItem() {
+            const input = document.getElementById('new-todo');
+            const todoText = input.value.trim();
             
-            // 显示处理完成模态框
-            const completeModal = document.getElementById('processing-complete-modal');
-            completeModal.classList.remove('hidden');
+            if (todoText) {
+                const todoList = document.getElementById('todo-list');
+                const todoItem = document.createElement('div');
+                todoItem.className = 'flex items-center space-x-2 p-2 bg-white/5 rounded-lg transition-all hover:bg-white/10';
+                todoItem.innerHTML = `
+                    <input type="checkbox" class="todo-checkbox rounded text-primary focus:ring-primary">
+                    <span>${todoText}</span>
+                `;
+                
+                todoList.appendChild(todoItem);
+                input.value = '';
+                
+                // 添加事件监听
+                todoItem.querySelector('.todo-checkbox').addEventListener('change', toggleTodoItem);
+                
+                // 添加动画效果
+                todoItem.style.opacity = '0';
+                todoItem.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    todoItem.style.opacity = '1';
+                    todoItem.style.transform = 'translateY(0)';
+                }, 10);
+            }
+        }
+        
+        function toggleTodoItem(e) {
+            const todoItem = e.target.parentElement;
+            const todoText = todoItem.querySelector('span');
             
-            // 将文件添加到数据集
-            uploadedFiles.forEach(file => {
-              dataset.documents.push({
-                id: `doc-${Date.now()}-${dataset.documents.length}`,
-                name: file.name,
-                type: file.type
-              });
+            if (e.target.checked) {
+                todoText.style.textDecoration = 'line-through';
+                todoText.style.opacity = '0.5';
+            } else {
+                todoText.style.textDecoration = 'none';
+                todoText.style.opacity = '1';
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            displayRandomQuote();
+            setInterval(displayRandomQuote, 10000); // 每10秒更换一条激励语句
+            
+            // 添加事件监听
+            document.getElementById('toggle-study-timer').addEventListener('click', startStudyTimer);
+            
+            document.getElementById('new-todo').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTodoItem();
+                }
             });
             
-            // 清空上传文件列表
-            uploadedFiles = [];
-            updateUploadedFilesList();
+            // 为现有待办事项添加事件监听
+            document.querySelectorAll('.todo-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', toggleTodoItem);
+            });
             
-            // 更新页面状态
-            updatePageState();
-          }, 500);
-        }
-        
-        document.getElementById('processing-percentage').textContent = `${Math.round(progress)}%`;
-        document.getElementById('processing-bar').style.width = `${progress}%`;
-        
-        // 更新处理详情
-        if (progress > 30 && progress <= 60) {
-          document.getElementById('processing-details').innerHTML = `
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 文档上传完成</p>
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 文档内容解析完成</p>
-            <p><i class="fa fa-spinner text-yellow-500 mr-1"></i> 正在生成向量表示...</p>
-            <p><i class="fa fa-circle-o text-gray-400 mr-1"></i> 正在索引知识库...</p>
-          `;
-        } else if (progress > 60 && progress <= 90) {
-          document.getElementById('processing-details').innerHTML = `
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 文档上传完成</p>
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 文档内容解析完成</p>
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 向量表示生成完成</p>
-            <p><i class="fa fa-spinner text-yellow-500 mr-1"></i> 正在索引知识库...</p>
-          `;
-        } else if (progress > 90) {
-          document.getElementById('processing-details').innerHTML = `
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 文档上传完成</p>
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 文档内容解析完成</p>
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 向量表示生成完成</p>
-            <p><i class="fa fa-check-circle text-green-500 mr-1"></i> 知识库索引完成</p>
-          `;
-        }
-      }, 300);
-    }
-    
-    // 关闭处理完成模态框
-    function closeProcessingCompleteModal() {
-      const modal = document.getElementById('processing-complete-modal');
-      modal.classList.add('hidden');
-    }
-    
-    // 开始与数据集聊天
-    function startChatWithDataset() {
-      const datasetId = document.getElementById('select-dataset').value;
-      const dataset = datasets.find(d => d.id === datasetId);
-      
-      if (!dataset) {
-        alert('请选择一个有效的知识库');
-        return;
-      }
-      
-      // 关闭模态框
-      closeProcessingCompleteModal();
-      
-      // 选择数据集
-      selectDataset(dataset);
-    }
-    
-    // 打开聊天设置模态框
-    function openChatSettingsModal() {
-      const modal = document.getElementById('chat-settings-modal');
-      const modalContent = document.getElementById('settings-modal-content');
-      
-      // 显示模态框
-      modal.classList.remove('hidden');
-      
-      // 添加动画
-      setTimeout(() => {
-        modalContent.classList.remove('scale-95', 'opacity-0');
-        modalContent.classList.add('scale-100', 'opacity-100');
-      }, 10);
-    }
-    
-    // 关闭聊天设置模态框
-    function closeChatSettingsModal() {
-      const modal = document.getElementById('chat-settings-modal');
-      const modalContent = document.getElementById('settings-modal-content');
-      
-      // 添加动画
-      modalContent.classList.remove('scale-100', 'opacity-100');
-      modalContent.classList.add('scale-95', 'opacity-0');
-      
-      // 隐藏模态框
-      setTimeout(() => {
-        modal.classList.add('hidden');
-      }, 300);
-    }
-    
-    // 处理聊天设置提交
-    function handleChatSettingsSubmit(e) {
-      e.preventDefault();
-      
-      // 保存设置（实际应用中会保存到本地存储或服务器）
-      const model = document.getElementById('model-select').value;
-      const temperature = parseFloat(document.getElementById('temperature').value);
-      const maxTokens = parseInt(document.getElementById('max-tokens').value);
-      
-      // 显示成功消息
-      addMessage('system', `已更新聊天设置: 模型=${model}, 创造力=${temperature}, 最大回复长度=${maxTokens}`);
-      
-      // 关闭模态框
-      closeChatSettingsModal();
-    }
-    
-    // 更新温度值显示
-    function updateTemperatureValue() {
-      const temperature = document.getElementById('temperature').value;
-      document.getElementById('temperature-value').textContent = temperature;
-    }
-    
-    // 切换移动端菜单
-    function toggleMobileMenu() {
-      const mobileMenu = document.getElementById('mobile-menu');
-      mobileMenu.classList.toggle('hidden');
-    }
-    
-    // 切换个人资料下拉菜单
-    function toggleProfileDropdown() {
-      const dropdown = document.getElementById('profile-dropdown');
-      dropdown.classList.toggle('hidden');
-    }
-    
-    // 点击页面其他区域关闭下拉菜单
-    document.addEventListener('click', (e) => {
-      const profileButton = document.getElementById('profile-button');
-      const profileDropdown = document.getElementById('profile-dropdown');
-      
-      if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
-        profileDropdown.classList.add('hidden');
-      }
-    });
-  </script>
+            // 窗口大小改变时重新生成粒子
+            window.addEventListener('resize', () => {
+                const particlesContainer = document.querySelector('.particles');
+                particlesContainer.innerHTML = '';
+                createParticles();
+            });
+        });
+    </script>
 </body>
 </html>
